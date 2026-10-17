@@ -1,0 +1,414 @@
+{
+  "audit": {
+    "rows": 119390,
+    "columns": 32,
+    "sha256": "7c2ae42a7353905ea136e5c2287f17c92c5435826598bfbb8491c6f0c7b1fc06",
+    "exact_duplicate_rows": 31994,
+    "missing": {
+      "hotel": 0,
+      "is_canceled": 0,
+      "lead_time": 0,
+      "arrival_date_year": 0,
+      "arrival_date_month": 0,
+      "arrival_date_week_number": 0,
+      "arrival_date_day_of_month": 0,
+      "stays_in_weekend_nights": 0,
+      "stays_in_week_nights": 0,
+      "adults": 0,
+      "children": 4,
+      "babies": 0,
+      "meal": 0,
+      "country": 488,
+      "market_segment": 0,
+      "distribution_channel": 0,
+      "is_repeated_guest": 0,
+      "previous_cancellations": 0,
+      "previous_bookings_not_canceled": 0,
+      "reserved_room_type": 0,
+      "assigned_room_type": 0,
+      "booking_changes": 0,
+      "deposit_type": 0,
+      "agent": 16340,
+      "company": 112593,
+      "days_in_waiting_list": 0,
+      "customer_type": 0,
+      "adr": 0,
+      "required_car_parking_spaces": 0,
+      "total_of_special_requests": 0,
+      "reservation_status": 0,
+      "reservation_status_date": 0
+    },
+    "excluded_invalid": 825,
+    "cancellation_rate": 0.37041628277075134,
+    "arrival_start": "2015-07-01",
+    "arrival_end": "2017-08-31",
+    "eligible_rows": 118565,
+    "excluded_not_active": 0,
+    "late_event_rate": 0.3725888753004681
+  },
+  "target": "Rezervasyon oluşturulduğu anda müşterinin ileride rezervasyonunu iptal etme olasılığı",
+  "prediction_time": "Rezervasyon oluşturulma anı (booking_date)",
+  "features": [
+    "lead_time",
+    "arrival_month",
+    "arrival_weekday",
+    "stays_in_weekend_nights",
+    "stays_in_week_nights",
+    "adults",
+    "children",
+    "babies",
+    "hotel",
+    "meal",
+    "market_segment",
+    "distribution_channel",
+    "reserved_room_type",
+    "customer_type"
+  ],
+  "selection_rule": "Validation average precision, tie: lower Brier; sigmoid calibration on separate 2016 Q4",
+  "selected": "Rastgele orman",
+  "versions": {
+    "python": "3.12.14",
+    "sklearn": "1.9.1",
+    "pandas": "2.3.3",
+    "numpy": "2.5.4"
+  },
+  "splits": {
+    "train": {
+      "rows": 48360,
+      "events": 17565,
+      "start": "2015-07-01",
+      "end": "2016-06-30",
+      "last_outcome": "2016-06-30"
+    },
+    "validation": {
+      "rows": 14545,
+      "events": 5339,
+      "start": "2016-07-01",
+      "end": "2016-09-30",
+      "last_outcome": "2016-09-30"
+    },
+    "calibration": {
+      "rows": 13969,
+      "events": 5542,
+      "start": "2016-10-01",
+      "end": "2016-12-31",
+      "last_outcome": "2016-12-31"
+    },
+    "test": {
+      "rows": 40510,
+      "events": 15730,
+      "start": "2017-01-01",
+      "end": "2017-08-31",
+      "last_outcome": "2017-09-14"
+    }
+  },
+  "candidates": {
+    "Genel oran": {
+      "validation": {
+        "rows": 14545,
+        "events": 5339,
+        "event_rate": 0.3670677208662771,
+        "roc_auc": 0.5,
+        "average_precision": 0.3670677208662771,
+        "f1": 0.0,
+        "brier": 0.23234386495747986,
+        "log_loss": 0.6574086756908357
+      },
+      "test": {
+        "rows": 40510,
+        "events": 15730,
+        "event_rate": 0.38829918538632435,
+        "roc_auc": 0.5,
+        "average_precision": 0.38829918538632435,
+        "f1": 0.0,
+        "brier": 0.23815222466798905,
+        "log_loss": 0.6693289551910396
+      }
+    },
+    "Otel ve kanal oranı": {
+      "validation": {
+        "rows": 14545,
+        "events": 5339,
+        "event_rate": 0.3670677208662771,
+        "roc_auc": 0.6142378987913003,
+        "average_precision": 0.4943282416597742,
+        "f1": 0.29550256565046784,
+        "brier": 0.21754329555002272,
+        "log_loss": 0.6259623209064529
+      },
+      "test": {
+        "rows": 40510,
+        "events": 15730,
+        "event_rate": 0.38829918538632435,
+        "roc_auc": 0.6310281231352111,
+        "average_precision": 0.49677517038486385,
+        "f1": 0.3152965178281634,
+        "brier": 0.22637007480476526,
+        "log_loss": 0.6434451160625331
+      }
+    },
+    "Lojistik regresyon": {
+      "validation": {
+        "rows": 14545,
+        "events": 5339,
+        "event_rate": 0.3670677208662771,
+        "roc_auc": 0.6722113911637797,
+        "average_precision": 0.6151857747428444,
+        "f1": 0.5078841217455079,
+        "brier": 0.21934886414115448,
+        "log_loss": 0.6243496099083092
+      },
+      "test": {
+        "rows": 40510,
+        "events": 15730,
+        "event_rate": 0.38829918538632435,
+        "roc_auc": 0.7207992444124955,
+        "average_precision": 0.6326640930325073,
+        "f1": 0.5597945707997065,
+        "brier": 0.20698257431248612,
+        "log_loss": 0.601573457914921
+      }
+    },
+    "Rastgele orman": {
+      "validation": {
+        "rows": 14545,
+        "events": 5339,
+        "event_rate": 0.3670677208662771,
+        "roc_auc": 0.7044995818382247,
+        "average_precision": 0.6240332816950669,
+        "f1": 0.3829957356076759,
+        "brier": 0.19649430510853808,
+        "log_loss": 0.5723710840586704
+      },
+      "test": {
+        "rows": 40510,
+        "events": 15730,
+        "event_rate": 0.38829918538632435,
+        "roc_auc": 0.7524105363049893,
+        "average_precision": 0.6816841273158192,
+        "f1": 0.4252794889345197,
+        "brier": 0.19139204901184362,
+        "log_loss": 0.561482232910782
+      }
+    },
+    "Gradient boosting": {
+      "validation": {
+        "rows": 14545,
+        "events": 5339,
+        "event_rate": 0.3670677208662771,
+        "roc_auc": 0.7008346084219039,
+        "average_precision": 0.622031934320403,
+        "f1": 0.4939721144774085,
+        "brier": 0.2118452691934997,
+        "log_loss": 0.6161145015854436
+      },
+      "test": {
+        "rows": 40510,
+        "events": 15730,
+        "event_rate": 0.38829918538632435,
+        "roc_auc": 0.7583648837038668,
+        "average_precision": 0.6811359197657103,
+        "f1": 0.5380501851090086,
+        "brier": 0.1935072898551456,
+        "log_loss": 0.5725922179542549
+      }
+    }
+  },
+  "selected_calibrated_test": {
+    "rows": 40510,
+    "events": 15730,
+    "event_rate": 0.38829918538632435,
+    "roc_auc": 0.7524105363049893,
+    "average_precision": 0.6816841273158192,
+    "f1": 0.5081217473584608,
+    "brier": 0.19092917509063723,
+    "log_loss": 0.5597115153369364
+  },
+  "ap_day_bootstrap_95": [
+    0.6463330693958923,
+    0.7142497650320406
+  ],
+  "daily_queue": [
+    {
+      "capacity_per_hotel_day": 10,
+      "reviewed": 4860,
+      "found_events": 2920,
+      "precision": 0.6008230452674898,
+      "recall": 0.1856325492689129,
+      "random_expected_events": 1676.1661598420255,
+      "lift_over_random": 1.7420707266129287
+    },
+    {
+      "capacity_per_hotel_day": 20,
+      "reviewed": 9709,
+      "found_events": 5295,
+      "precision": 0.545370275002575,
+      "recall": 0.3366179275270184,
+      "random_expected_events": 3350.3584634749004,
+      "lift_over_random": 1.580427902782728
+    }
+  ],
+  "calibration": [
+    {
+      "predicted": 0.12673280513668891,
+      "actual": 0.08294248333744754,
+      "count": 4051
+    },
+    {
+      "predicted": 0.18280128565718762,
+      "actual": 0.1478647247593187,
+      "count": 4051
+    },
+    {
+      "predicted": 0.23832988049689371,
+      "actual": 0.17921500863984202,
+      "count": 4051
+    },
+    {
+      "predicted": 0.3079552782818243,
+      "actual": 0.2957294495186374,
+      "count": 4051
+    },
+    {
+      "predicted": 0.37600050624013115,
+      "actual": 0.39126141693409033,
+      "count": 4051
+    },
+    {
+      "predicted": 0.41425095086770114,
+      "actual": 0.4248333744754382,
+      "count": 4051
+    },
+    {
+      "predicted": 0.4502540665790227,
+      "actual": 0.4681795757276764,
+      "count": 4054
+    },
+    {
+      "predicted": 0.49376037927154676,
+      "actual": 0.49851778656126483,
+      "count": 4048
+    },
+    {
+      "predicted": 0.6006607395814271,
+      "actual": 0.535176499629721,
+      "count": 4051
+    },
+    {
+      "predicted": 0.8638599268972861,
+      "actual": 0.8592940014811158,
+      "count": 4051
+    }
+  ],
+  "unique_record_sensitivity": {
+    "rows": 31530,
+    "events": 10102,
+    "event_rate": 0.3203932762448462,
+    "roc_auc": 0.6965142752252579,
+    "average_precision": 0.47151923437712995,
+    "f1": 0.3230171489817792,
+    "brier": 0.19889079269544882,
+    "log_loss": 0.5800986801591688
+  },
+  "permutation_importance": [
+    {
+      "feature": "market_segment",
+      "ap_decrease": 0.1347527966303045,
+      "std": 0.002043681994519568
+    },
+    {
+      "feature": "customer_type",
+      "ap_decrease": 0.12755338099817456,
+      "std": 0.0010659931962216497
+    },
+    {
+      "feature": "lead_time",
+      "ap_decrease": 0.06488406280819821,
+      "std": 0.0002682730624072204
+    },
+    {
+      "feature": "hotel",
+      "ap_decrease": 0.013820419772667273,
+      "std": 0.0006358060664270328
+    },
+    {
+      "feature": "distribution_channel",
+      "ap_decrease": 0.012254950507057863,
+      "std": 0.0008737922564727462
+    },
+    {
+      "feature": "reserved_room_type",
+      "ap_decrease": 0.005422754745914915,
+      "std": 0.0001908156439379494
+    },
+    {
+      "feature": "stays_in_weekend_nights",
+      "ap_decrease": 0.0036789309705409132,
+      "std": 0.0002145428877699565
+    },
+    {
+      "feature": "adults",
+      "ap_decrease": 0.0030051522495906737,
+      "std": 0.00026989019435731025
+    },
+    {
+      "feature": "stays_in_week_nights",
+      "ap_decrease": 0.002431046417615231,
+      "std": 0.00023652760265448076
+    },
+    {
+      "feature": "children",
+      "ap_decrease": 0.0016378920241354085,
+      "std": 0.0001285733995546678
+    },
+    {
+      "feature": "meal",
+      "ap_decrease": 0.0006995687813261542,
+      "std": 0.00010174491423270929
+    },
+    {
+      "feature": "babies",
+      "ap_decrease": 1.952901997692713e-05,
+      "std": 2.568531013795732e-06
+    },
+    {
+      "feature": "arrival_weekday",
+      "ap_decrease": -0.0002322887128476392,
+      "std": 0.00016757258095532248
+    },
+    {
+      "feature": "arrival_month",
+      "ap_decrease": -0.003204544883881962,
+      "std": 0.0002599283143422868
+    }
+  ],
+  "by_hotel": {
+    "Resort Hotel": {
+      "rows": 13114,
+      "events": 4053,
+      "event_rate": 0.3090590208937014,
+      "roc_auc": 0.7669005231504766,
+      "average_precision": 0.6015649834359554,
+      "f1": 0.27757721620537507,
+      "brier": 0.1747924697674365,
+      "log_loss": 0.5237275705580015
+    },
+    "City Hotel": {
+      "rows": 27396,
+      "events": 11677,
+      "event_rate": 0.4262301065849029,
+      "roc_auc": 0.742980670693262,
+      "average_precision": 0.7132181581803602,
+      "f1": 0.5645303758955736,
+      "brier": 0.19865354191821988,
+      "log_loss": 0.5769364186743198
+    }
+  },
+  "limitations": [
+    "Retrospective snapshot; field timestamps cannot be fully verified.",
+    "Two Portuguese hotels, 2015–2017. No real hotel prospective validation.",
+    "Exact duplicate rows retained; no booking/group IDs.",
+    "Public snapshot does not measure causal effect of contacting guests."
+  ],
+  "beats_constant_brier": true
+}

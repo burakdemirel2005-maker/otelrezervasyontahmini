@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+artifacts/*.sqlite3*
+artifacts/*.log
+.DS_Store
+backups/
+artifacts_v1_backup/
+*.zip
