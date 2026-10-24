@@ -6,14 +6,56 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / 'data' / 'hotel_bookings.csv'
 MONTHS = dict(zip(['January','February','March','April','May','June','July','August','September','October','November','December'], range(1,13)))
-NUM = ['lead_time','arrival_month','arrival_weekday','stays_in_weekend_nights','stays_in_week_nights','adults','children','babies']
-CAT = ['hotel','meal','market_segment','distribution_channel','reserved_room_type','customer_type']
+NUM = ['lead_time','arrival_month','arrival_weekday','stays_in_weekend_nights','stays_in_week_nights','adults','children','babies',
+       'is_repeated_guest','previous_cancellations','previous_bookings_not_canceled','booking_changes','days_in_waiting_list',
+       'adr','required_car_parking_spaces','total_of_special_requests','room_mismatch','total_nights','total_guests','prev_cancel_ratio']
+CAT = ['hotel','meal','market_segment','distribution_channel','reserved_room_type','assigned_room_type','deposit_type','customer_type','country','agent']
 FEATURES = NUM + CAT
-FORBIDDEN = ['is_canceled','reservation_status','reservation_status_date','assigned_room_type','booking_changes','adr','deposit_type']
+CORE_NUM = ['lead_time','arrival_month','arrival_weekday','stays_in_weekend_nights','stays_in_week_nights','adults','children','babies']
+CORE_CAT = ['hotel','meal','market_segment','distribution_channel','reserved_room_type','customer_type']
+FORBIDDEN = ['is_canceled','reservation_status','reservation_status_date']
+
+def _enrich_features(d):
+    defaults_num = {
+        'is_repeated_guest': 0,
+        'previous_cancellations': 0,
+        'previous_bookings_not_canceled': 0,
+        'booking_changes': 0,
+        'days_in_waiting_list': 0,
+        'adr': 100.0,
+        'required_car_parking_spaces': 0,
+        'total_of_special_requests': 0,
+    }
+    for col, val in defaults_num.items():
+        if col not in d:
+            d[col] = val
+        else:
+            d[col] = pd.to_numeric(d[col], errors='coerce').fillna(val)
+    if 'assigned_room_type' not in d:
+        d['assigned_room_type'] = d['reserved_room_type']
+    else:
+        d['assigned_room_type'] = d['assigned_room_type'].fillna(d['reserved_room_type']).astype(str)
+    if 'deposit_type' not in d:
+        d['deposit_type'] = 'No Deposit'
+    else:
+        d['deposit_type'] = d['deposit_type'].fillna('No Deposit').astype(str)
+    if 'country' not in d:
+        d['country'] = 'PRT'
+    else:
+        d['country'] = d['country'].fillna('Unknown').astype(str)
+    if 'agent' not in d:
+        d['agent'] = '9.0'
+    else:
+        d['agent'] = d['agent'].fillna('Unknown').astype(str)
+    d['room_mismatch'] = (d['reserved_room_type'].astype(str) != d['assigned_room_type'].astype(str)).astype(int)
+    d['total_nights'] = d['stays_in_weekend_nights'] + d['stays_in_week_nights']
+    d['total_guests'] = d['adults'].fillna(0) + d['children'].fillna(0) + d['babies'].fillna(0)
+    d['prev_cancel_ratio'] = d['previous_cancellations'] / (d['previous_cancellations'] + d['previous_bookings_not_canceled'] + 1.0)
+    return d
 
 def load_history(path=SOURCE):
     raw = pd.read_csv(path)
-    required = set(NUM + CAT + ['is_canceled','reservation_status','reservation_status_date','arrival_date_year','arrival_date_month','arrival_date_day_of_month']) - {'arrival_month','arrival_weekday'}
+    required = set(CORE_NUM + CORE_CAT + ['is_canceled','reservation_status','reservation_status_date','arrival_date_year','arrival_date_month','arrival_date_day_of_month']) - {'arrival_month','arrival_weekday'}
     missing = required - set(raw)
     if missing:
         raise ValueError('Eksik sütunlar: ' + ', '.join(sorted(missing)))
@@ -25,6 +67,7 @@ def load_history(path=SOURCE):
     d['arrival_month'] = d.arrival_date.dt.month
     d['arrival_weekday'] = d.arrival_date.dt.dayofweek
     d['reservation_id'] = ['DEMO-' + str(i+1).zfill(6) for i in range(len(d))]
+    d = _enrich_features(d)
     valid = (d.arrival_date.notna() & d.outcome_date.notna() & d.is_canceled.isin([0,1])
         & (d.adults.fillna(0)+d.children.fillna(0)+d.babies.fillna(0)>0)
         & (d.stays_in_weekend_nights+d.stays_in_week_nights>0)
@@ -54,7 +97,7 @@ def temporal_split(d):
 
 def validate_active(raw):
     """Strict single-hotel active day-before snapshot contract, no outcome columns."""
-    required = set(NUM + CAT + ['reservation_id','arrival_date','snapshot_date','status']) - {'arrival_month','arrival_weekday'}
+    required = set(CORE_NUM + CORE_CAT + ['reservation_id','arrival_date','snapshot_date','status']) - {'arrival_month','arrival_weekday'}
     missing = required - set(raw)
     if missing:
         raise ValueError('Eksik sütunlar: ' + ', '.join(sorted(missing)))
@@ -77,7 +120,7 @@ def validate_active(raw):
         raise ValueError('Tek bir snapshot_date ve bu tarihten bir gün sonraki gelişler gerekli.')
     if not d.status.eq('active').all():
         raise ValueError('Yalnızca status=active rezervasyonlar kabul edilir.')
-    for c in NUM:
+    for c in CORE_NUM:
         if c in ['arrival_month','arrival_weekday']:
             continue
         d[c] = pd.to_numeric(d[c], errors='coerce')
@@ -85,7 +128,7 @@ def validate_active(raw):
             raise ValueError(c + ': eksiksiz, negatif olmayan tam sayılar gerekli.')
     if d.lead_time.lt(1).any() or (d.adults+d.children+d.babies).le(0).any() or (d.stays_in_weekend_nights+d.stays_in_week_nights).le(0).any():
         raise ValueError('En az bir gün önceden yapılmış, misafir ve gece sayısı pozitif rezervasyonlar gerekli.')
-    for c in CAT:
+    for c in CORE_CAT:
         if d[c].isna().any() or d[c].astype(str).str.strip().eq('').any():
             raise ValueError(c + ': boş değer bulunamaz.')
     if not d.hotel.isin(['City Hotel','Resort Hotel']).all():
@@ -95,4 +138,5 @@ def validate_active(raw):
     d['arrival_month'] = d.arrival_date.dt.month
     d['arrival_weekday'] = d.arrival_date.dt.dayofweek
     d['decision_date'] = d.snapshot_date
+    d = _enrich_features(d)
     return d

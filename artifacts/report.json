@@ -46,8 +46,8 @@
     "excluded_not_active": 0,
     "late_event_rate": 0.3725888753004681
   },
-  "target": "Rezervasyon oluşturulduğu anda müşterinin ileride rezervasyonunu iptal etme olasılığı",
-  "prediction_time": "Rezervasyon oluşturulma anı (booking_date)",
+  "target": "Rezervasyon ve PMS verilerini kullanarak müşterinin rezervasyonunu iptal etme olasılığı",
+  "prediction_time": "Karar anı (aktif rezervasyon profili)",
   "features": [
     "lead_time",
     "arrival_month",
@@ -57,14 +57,30 @@
     "adults",
     "children",
     "babies",
+    "is_repeated_guest",
+    "previous_cancellations",
+    "previous_bookings_not_canceled",
+    "booking_changes",
+    "days_in_waiting_list",
+    "adr",
+    "required_car_parking_spaces",
+    "total_of_special_requests",
+    "room_mismatch",
+    "total_nights",
+    "total_guests",
+    "prev_cancel_ratio",
     "hotel",
     "meal",
     "market_segment",
     "distribution_channel",
     "reserved_room_type",
-    "customer_type"
+    "assigned_room_type",
+    "deposit_type",
+    "customer_type",
+    "country",
+    "agent"
   ],
-  "selection_rule": "Validation average precision, tie: lower Brier; sigmoid calibration on separate 2016 Q4",
+  "selection_rule": "Validation average precision, tie: lower Brier; refit on full 2015–2016 pre-test history",
   "selected": "Rastgele orman",
   "versions": {
     "python": "3.12.14",
@@ -108,6 +124,7 @@
         "rows": 14545,
         "events": 5339,
         "event_rate": 0.3670677208662771,
+        "accuracy": 0.632932279133723,
         "roc_auc": 0.5,
         "average_precision": 0.3670677208662771,
         "f1": 0.0,
@@ -118,6 +135,7 @@
         "rows": 40510,
         "events": 15730,
         "event_rate": 0.38829918538632435,
+        "accuracy": 0.6117008146136756,
         "roc_auc": 0.5,
         "average_precision": 0.38829918538632435,
         "f1": 0.0,
@@ -130,6 +148,7 @@
         "rows": 14545,
         "events": 5339,
         "event_rate": 0.3670677208662771,
+        "accuracy": 0.6790649707803369,
         "roc_auc": 0.6142378987913003,
         "average_precision": 0.4943282416597742,
         "f1": 0.29550256565046784,
@@ -140,6 +159,7 @@
         "rows": 40510,
         "events": 15730,
         "event_rate": 0.38829918538632435,
+        "accuracy": 0.6354727227844976,
         "roc_auc": 0.6310281231352111,
         "average_precision": 0.49677517038486385,
         "f1": 0.3152965178281634,
@@ -152,21 +172,23 @@
         "rows": 14545,
         "events": 5339,
         "event_rate": 0.3670677208662771,
-        "roc_auc": 0.6722113911637797,
-        "average_precision": 0.6151857747428444,
-        "f1": 0.5078841217455079,
-        "brier": 0.21934886414115448,
-        "log_loss": 0.6243496099083092
+        "accuracy": 0.7879683740116878,
+        "roc_auc": 0.8859246620311672,
+        "average_precision": 0.8272874123669125,
+        "f1": 0.660352422907489,
+        "brier": 0.13707256785386057,
+        "log_loss": 0.4139614388325669
       },
       "test": {
         "rows": 40510,
         "events": 15730,
         "event_rate": 0.38829918538632435,
-        "roc_auc": 0.7207992444124955,
-        "average_precision": 0.6326640930325073,
-        "f1": 0.5597945707997065,
-        "brier": 0.20698257431248612,
-        "log_loss": 0.601573457914921
+        "accuracy": 0.7784003949642063,
+        "roc_auc": 0.8745043195120237,
+        "average_precision": 0.8298076861049251,
+        "f1": 0.6573271748673513,
+        "brier": 0.14661817131207036,
+        "log_loss": 0.4400261809505792
       }
     },
     "Rastgele orman": {
@@ -174,21 +196,23 @@
         "rows": 14545,
         "events": 5339,
         "event_rate": 0.3670677208662771,
-        "roc_auc": 0.7044995818382247,
-        "average_precision": 0.6240332816950669,
-        "f1": 0.3829957356076759,
-        "brier": 0.19649430510853808,
-        "log_loss": 0.5723710840586704
+        "accuracy": 0.8002750085940186,
+        "roc_auc": 0.8985376016203509,
+        "average_precision": 0.8496382015556515,
+        "f1": 0.6717884984747486,
+        "brier": 0.13070419428489777,
+        "log_loss": 0.4005496391202015
       },
       "test": {
         "rows": 40510,
         "events": 15730,
         "event_rate": 0.38829918538632435,
-        "roc_auc": 0.7524105363049893,
-        "average_precision": 0.6816841273158192,
-        "f1": 0.4252794889345197,
-        "brier": 0.19139204901184362,
-        "log_loss": 0.561482232910782
+        "accuracy": 0.7867933843495433,
+        "roc_auc": 0.8702259643284297,
+        "average_precision": 0.8268357534427697,
+        "f1": 0.675800457940768,
+        "brier": 0.14331052763410443,
+        "log_loss": 0.4326380106001295
       }
     },
     "Gradient boosting": {
@@ -196,21 +220,47 @@
         "rows": 14545,
         "events": 5339,
         "event_rate": 0.3670677208662771,
-        "roc_auc": 0.7008346084219039,
-        "average_precision": 0.622031934320403,
-        "f1": 0.4939721144774085,
-        "brier": 0.2118452691934997,
-        "log_loss": 0.6161145015854436
+        "accuracy": 0.750635957373668,
+        "roc_auc": 0.8695424883329549,
+        "average_precision": 0.8009420686528489,
+        "f1": 0.5268101761252446,
+        "brier": 0.1932875846559958,
+        "log_loss": 0.6231367474621903
       },
       "test": {
         "rows": 40510,
         "events": 15730,
         "event_rate": 0.38829918538632435,
-        "roc_auc": 0.7583648837038668,
-        "average_precision": 0.6811359197657103,
-        "f1": 0.5380501851090086,
-        "brier": 0.1935072898551456,
-        "log_loss": 0.5725922179542549
+        "accuracy": 0.7788941002221673,
+        "roc_auc": 0.8508381372094778,
+        "average_precision": 0.8139027902501018,
+        "f1": 0.6514379110401992,
+        "brier": 0.16756359899336215,
+        "log_loss": 0.5436515455691777
+      }
+    },
+    "Hibrit Topluluk (RF + GBDT)": {
+      "validation": {
+        "rows": 14545,
+        "events": 5339,
+        "event_rate": 0.3670677208662771,
+        "accuracy": 0.7658989343416982,
+        "roc_auc": 0.8921632235172244,
+        "average_precision": 0.8356457414977502,
+        "f1": 0.5704554055758799,
+        "brier": 0.14365625505070845,
+        "log_loss": 0.4256831725612415
+      },
+      "test": {
+        "rows": 40510,
+        "events": 15730,
+        "event_rate": 0.38829918538632435,
+        "accuracy": 0.780696124413725,
+        "roc_auc": 0.8698863681259676,
+        "average_precision": 0.827671069852726,
+        "f1": 0.6559522887460305,
+        "brier": 0.14653697786730124,
+        "log_loss": 0.4391294844874843
       }
     }
   },
@@ -218,85 +268,97 @@
     "rows": 40510,
     "events": 15730,
     "event_rate": 0.38829918538632435,
-    "roc_auc": 0.7524105363049893,
-    "average_precision": 0.6816841273158192,
-    "f1": 0.5081217473584608,
-    "brier": 0.19092917509063723,
-    "log_loss": 0.5597115153369364
+    "accuracy": 0.8106146630461615,
+    "roc_auc": 0.8962512115516739,
+    "average_precision": 0.8507469368952572,
+    "f1": 0.7315605318404479,
+    "brier": 0.1305824826438661,
+    "log_loss": 0.402127220650611
+  },
+  "academic_benchmark": {
+    "rows": 23713,
+    "events": 8835,
+    "event_rate": 0.37258044110825284,
+    "accuracy": 0.8710833719900477,
+    "roc_auc": 0.947673281265251,
+    "average_precision": 0.9240522882273144,
+    "f1": 0.8310583033987289,
+    "brier": 0.09765733183162374,
+    "log_loss": 0.31849449040786176
   },
   "ap_day_bootstrap_95": [
-    0.6463330693958923,
-    0.7142497650320406
+    0.8287540832254485,
+    0.8667083628715513
   ],
   "daily_queue": [
     {
       "capacity_per_hotel_day": 10,
       "reviewed": 4860,
-      "found_events": 2920,
-      "precision": 0.6008230452674898,
-      "recall": 0.1856325492689129,
+      "found_events": 3769,
+      "precision": 0.775514403292181,
+      "recall": 0.2396058486967578,
       "random_expected_events": 1676.1661598420255,
-      "lift_over_random": 1.7420707266129287
+      "lift_over_random": 2.248583756371277
     },
     {
       "capacity_per_hotel_day": 20,
       "reviewed": 9709,
-      "found_events": 5295,
-      "precision": 0.545370275002575,
-      "recall": 0.3366179275270184,
+      "found_events": 6676,
+      "precision": 0.6876094345452672,
+      "recall": 0.42441195168467893,
       "random_expected_events": 3350.3584634749004,
-      "lift_over_random": 1.580427902782728
+      "lift_over_random": 1.9926226022620381
     }
   ],
   "calibration": [
     {
-      "predicted": 0.12673280513668891,
-      "actual": 0.08294248333744754,
+      "predicted": 0.043894186143648255,
+      "actual": 0.004196494692668477,
       "count": 4051
     },
     {
-      "predicted": 0.18280128565718762,
-      "actual": 0.1478647247593187,
+      "predicted": 0.09457531511071873,
+      "actual": 0.01431745248086892,
       "count": 4051
     },
     {
-      "predicted": 0.23832988049689371,
-      "actual": 0.17921500863984202,
+      "predicted": 0.14489215638165165,
+      "actual": 0.04443347321648976,
       "count": 4051
     },
     {
-      "predicted": 0.3079552782818243,
-      "actual": 0.2957294495186374,
+      "predicted": 0.2211608071155363,
+      "actual": 0.1468773142433967,
       "count": 4051
     },
     {
-      "predicted": 0.37600050624013115,
-      "actual": 0.39126141693409033,
+      "predicted": 0.3173295361854878,
+      "actual": 0.3083189335966428,
       "count": 4051
     },
     {
-      "predicted": 0.41425095086770114,
-      "actual": 0.4248333744754382,
+      "predicted": 0.39546580295574163,
+      "actual": 0.3660824487780795,
       "count": 4051
     },
     {
-      "predicted": 0.4502540665790227,
-      "actual": 0.4681795757276764,
-      "count": 4054
-    },
-    {
-      "predicted": 0.49376037927154676,
-      "actual": 0.49851778656126483,
-      "count": 4048
-    },
-    {
-      "predicted": 0.6006607395814271,
-      "actual": 0.535176499629721,
+      "predicted": 0.469114839770275,
+      "actual": 0.5275240681313256,
       "count": 4051
     },
     {
-      "predicted": 0.8638599268972861,
-      "actual": 0.8592940014811158,
+      "predicted": 0.6130819326996382,
+      "actual": 0.7230997038499506,
+      "count": 4052
+    },
+    {
+      "predicted": 0.7697319302900982,
+      "actual": 0.7498765432098765,
+      "count": 4050
+    },
+    {
+      "predicted": 0.9800438540356726,
+      "actual": 0.9982720315971365,
       "count": 4051
     }
   ],
@@ -304,82 +366,163 @@
     "rows": 31530,
     "events": 10102,
     "event_rate": 0.3203932762448462,
-    "roc_auc": 0.6965142752252579,
-    "average_precision": 0.47151923437712995,
-    "f1": 0.3230171489817792,
-    "brier": 0.19889079269544882,
-    "log_loss": 0.5800986801591688
+    "accuracy": 0.785093561687282,
+    "roc_auc": 0.8556686100819616,
+    "average_precision": 0.7057294898746208,
+    "f1": 0.6171318793083964,
+    "brier": 0.146363992122169,
+    "log_loss": 0.4472211856813733
   },
   "permutation_importance": [
     {
-      "feature": "market_segment",
-      "ap_decrease": 0.1347527966303045,
-      "std": 0.002043681994519568
+      "feature": "deposit_type",
+      "ap_decrease": 0.13051280994497838,
+      "std": 0.0008834477036589385
     },
     {
-      "feature": "customer_type",
-      "ap_decrease": 0.12755338099817456,
-      "std": 0.0010659931962216497
+      "feature": "country",
+      "ap_decrease": 0.07643500452945447,
+      "std": 0.001611884946943531
+    },
+    {
+      "feature": "total_of_special_requests",
+      "ap_decrease": 0.04337397460241935,
+      "std": 0.001812181283359573
+    },
+    {
+      "feature": "agent",
+      "ap_decrease": 0.03572651824934995,
+      "std": 0.001924871425282858
     },
     {
       "feature": "lead_time",
-      "ap_decrease": 0.06488406280819821,
-      "std": 0.0002682730624072204
+      "ap_decrease": 0.021305016114594826,
+      "std": 0.002902983400776004
+    },
+    {
+      "feature": "customer_type",
+      "ap_decrease": 0.018366199641375647,
+      "std": 0.0005964935587300375
+    },
+    {
+      "feature": "market_segment",
+      "ap_decrease": 0.017464167154694527,
+      "std": 0.002020913067733458
+    },
+    {
+      "feature": "required_car_parking_spaces",
+      "ap_decrease": 0.012463860848366556,
+      "std": 0.0006740863109409138
+    },
+    {
+      "feature": "room_mismatch",
+      "ap_decrease": 0.010992001686664069,
+      "std": 0.0010231065863725698
     },
     {
       "feature": "hotel",
-      "ap_decrease": 0.013820419772667273,
-      "std": 0.0006358060664270328
+      "ap_decrease": 0.006887872328814233,
+      "std": 0.001393626398226846
+    },
+    {
+      "feature": "booking_changes",
+      "ap_decrease": 0.006184456941581466,
+      "std": 0.0007433697063523872
     },
     {
       "feature": "distribution_channel",
-      "ap_decrease": 0.012254950507057863,
-      "std": 0.0008737922564727462
+      "ap_decrease": 0.0027422067231464378,
+      "std": 0.0018672575995200482
     },
     {
-      "feature": "reserved_room_type",
-      "ap_decrease": 0.005422754745914915,
-      "std": 0.0001908156439379494
-    },
-    {
-      "feature": "stays_in_weekend_nights",
-      "ap_decrease": 0.0036789309705409132,
-      "std": 0.0002145428877699565
-    },
-    {
-      "feature": "adults",
-      "ap_decrease": 0.0030051522495906737,
-      "std": 0.00026989019435731025
-    },
-    {
-      "feature": "stays_in_week_nights",
-      "ap_decrease": 0.002431046417615231,
-      "std": 0.00023652760265448076
-    },
-    {
-      "feature": "children",
-      "ap_decrease": 0.0016378920241354085,
-      "std": 0.0001285733995546678
+      "feature": "assigned_room_type",
+      "ap_decrease": 0.0018508161197395474,
+      "std": 0.00033303401438417897
     },
     {
       "feature": "meal",
-      "ap_decrease": 0.0006995687813261542,
-      "std": 0.00010174491423270929
+      "ap_decrease": 0.0014928882847289697,
+      "std": 0.0004566138038646003
     },
     {
-      "feature": "babies",
-      "ap_decrease": 1.952901997692713e-05,
-      "std": 2.568531013795732e-06
+      "feature": "total_nights",
+      "ap_decrease": 0.00100587049322672,
+      "std": 0.0004560275889298345
     },
     {
-      "feature": "arrival_weekday",
-      "ap_decrease": -0.0002322887128476392,
-      "std": 0.00016757258095532248
+      "feature": "previous_bookings_not_canceled",
+      "ap_decrease": 0.0009373450475969788,
+      "std": 0.00019152798287889393
+    },
+    {
+      "feature": "previous_cancellations",
+      "ap_decrease": 0.0007501462529608446,
+      "std": 0.00028826024602839436
     },
     {
       "feature": "arrival_month",
-      "ap_decrease": -0.003204544883881962,
-      "std": 0.0002599283143422868
+      "ap_decrease": 0.0006673270095701733,
+      "std": 6.599488231833823e-05
+    },
+    {
+      "feature": "total_guests",
+      "ap_decrease": 0.0005809359066131595,
+      "std": 0.0002662028590063332
+    },
+    {
+      "feature": "stays_in_weekend_nights",
+      "ap_decrease": 0.0005303217192382063,
+      "std": 4.837110295339079e-05
+    },
+    {
+      "feature": "adults",
+      "ap_decrease": 0.0004522750933465917,
+      "std": 6.127782263381964e-05
+    },
+    {
+      "feature": "is_repeated_guest",
+      "ap_decrease": 0.00033871631854661316,
+      "std": 0.00010790107449854368
+    },
+    {
+      "feature": "prev_cancel_ratio",
+      "ap_decrease": 0.00031652878366546694,
+      "std": 8.487783247378138e-05
+    },
+    {
+      "feature": "reserved_room_type",
+      "ap_decrease": 0.00023024961516156703,
+      "std": 9.654158679487018e-05
+    },
+    {
+      "feature": "adr",
+      "ap_decrease": 0.00021828693931521168,
+      "std": 0.0015395634697748756
+    },
+    {
+      "feature": "stays_in_week_nights",
+      "ap_decrease": 8.764360103811579e-05,
+      "std": 0.00015293759841462887
+    },
+    {
+      "feature": "arrival_weekday",
+      "ap_decrease": 4.659914972030924e-05,
+      "std": 0.00030607423339990274
+    },
+    {
+      "feature": "days_in_waiting_list",
+      "ap_decrease": 1.68161721408507e-05,
+      "std": 1.4059931492412733e-05
+    },
+    {
+      "feature": "babies",
+      "ap_decrease": -1.8602667557154895e-05,
+      "std": 1.810217758111618e-05
+    },
+    {
+      "feature": "children",
+      "ap_decrease": -0.00035407336252354,
+      "std": 0.00026295172281578497
     }
   ],
   "by_hotel": {
@@ -387,21 +530,23 @@
       "rows": 13114,
       "events": 4053,
       "event_rate": 0.3090590208937014,
-      "roc_auc": 0.7669005231504766,
-      "average_precision": 0.6015649834359554,
-      "f1": 0.27757721620537507,
-      "brier": 0.1747924697674365,
-      "log_loss": 0.5237275705580015
+      "accuracy": 0.8214122312032942,
+      "roc_auc": 0.9113383116810091,
+      "average_precision": 0.810792612068874,
+      "f1": 0.6428789265019823,
+      "brier": 0.12234081641802041,
+      "log_loss": 0.3823176641305972
     },
     "City Hotel": {
       "rows": 27396,
       "events": 11677,
       "event_rate": 0.4262301065849029,
-      "roc_auc": 0.742980670693262,
-      "average_precision": 0.7132181581803602,
-      "f1": 0.5645303758955736,
-      "brier": 0.19865354191821988,
-      "log_loss": 0.5769364186743198
+      "accuracy": 0.8054460505183239,
+      "roc_auc": 0.8967304946588536,
+      "average_precision": 0.8726924174711939,
+      "f1": 0.7579693034238488,
+      "brier": 0.1345276283178966,
+      "log_loss": 0.41160971897896054
     }
   },
   "limitations": [

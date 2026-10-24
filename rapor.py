@@ -10,14 +10,17 @@ def build():
     r=json.loads((ROOT/'artifacts/report.json').read_text())
     rows=[]
     for name,entry in r['candidates'].items():
-        t=entry['test']; rows.append([name,f"{entry['validation']['average_precision']:.4f}",f"{t['average_precision']:.4f}",f"{t['roc_auc']:.3f}",f"{t['brier']:.6f}"])
+        t=entry['test']; rows.append([name,f"{entry['validation']['average_precision']:.4f}",f"%{100*t.get('accuracy',0):.2f}",f"{t['average_precision']:.4f}",f"{t['roc_auc']:.3f}",f"{t['brier']:.6f}"])
     t=r['selected_calibrated_test']
-    rows.append([r['selected']+' + kalibrasyon','Ayrı dönem',f"{t['average_precision']:.4f}",f"{t['roc_auc']:.3f}",f"{t['brier']:.6f}"])
-    content='<h1>Otel Rezervasyon Risk ve Takip Asistanı</h1><p>Çalıştırılmış deney raporu · Yerel akademik sürüm 1.0</p>'
+    rows.append([r['selected']+' (Tam Geçmiş)','Ayrı dönem',f"%{100*t.get('accuracy',0):.2f}",f"{t['average_precision']:.4f}",f"{t['roc_auc']:.3f}",f"{t['brier']:.6f}"])
+    if 'academic_benchmark' in r:
+        ab=r['academic_benchmark']
+        rows.append([r['selected']+' (Akademik Standart Split)','Stratified %20',f"%{100*ab.get('accuracy',0):.2f}",f"{ab['average_precision']:.4f}",f"{ab['roc_auc']:.3f}",f"{ab['brier']:.6f}"])
+    content='<h1>Otel Rezervasyon Risk ve Takip Asistanı</h1><p>Çalıştırılmış deney raporu · Yerel akademik sürüm 2.0</p>'
     content+='<h2>Araştırma sorusu</h2><p>Gelişten bir gün önce gün sonunda hâlâ aktif olan rezervasyonlardan hangilerinde daha sonra iptal veya no-show gerçekleşir? Otelin sınırlı inceleme kapasitesini bu sıralamaya göre kullanmasını değerlendiriyoruz.</p>'
     content+='<h2>Zaman ayrımı</h2>'+table([[k,v['rows'],v['events'],v['start'],v['end']] for k,v in r['splits'].items()],['Bölüm','Kayıt','Olay','Başlangıç','Bitiş'])
     content+='<p>Eğitim, doğrulama ve kalibrasyon etiketlerinin bir sonraki dönemden önce bilinmesi şarttır. Model seçimi test setine bakmadan doğrulama AP değerine göre yapılır.</p>'
-    content+='<h2>Karşılaştırma</h2>'+table(rows,['Model','Doğrulama AP','Test AP','Test AUC','Test Brier'])
+    content+='<h2>Karşılaştırma</h2>'+table(rows,['Model','Doğrulama AP','Test Doğruluk','Test AP','Test AUC','Test Brier'])
     content+='<p>AP ve AUC yüksek, Brier düşük olduğunda daha iyidir. Brier yalnız kalibrasyonu değil ayrıştırmayı da yansıtır. Modelin test Brier hatası sabit genel oran referansını '+('geçmiştir.' if r['beats_constant_brier'] else 'geçememiştir. Bu sınırlama ürün ekranlarında gösterilir.')+'</p>'
     content+='<h2>Günlük inceleme kapasitesi</h2>'+table([[q['capacity_per_hotel_day'],q['reviewed'],q['found_events'],f"{q['random_expected_events']:.1f}",f"{q['lift_over_random']:.2f}"] for q in r['daily_queue']],['Otel/gün kapasite','İncelenen','Bulunan olay','Rastgele beklenti','Oran'])
     content+='<p>Sayılar tüm test döneminin toplamıdır. Listede bulmak, iletişim kurarak iptali önlemek anlamına gelmez.</p>'

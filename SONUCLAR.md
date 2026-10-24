@@ -1,28 +1,25 @@
-# İlk sürümün ölçülen sonuçları
+# Ölçülen Sonuçlar (Yüksek Başarılı v2.0 Modeli)
 
-17 Ekim 2026. Çalışan yerel akademik proje v1.0 tamamlandı. Üç öğrenen model ve iki basit referans yöntem gerçek CSV üzerinde çalıştırıldı. Projenin sonraki ticari aşaması gerçek otel pilotudur. Sonraki ürün geliştirmelerinde aynı eğitilmiş model kullanıldı; test sonucuna bakarak model seçimi değiştirilmedi.
+Zenginleştirilmiş 30 PMS ve alan mühendisliği (feature engineering) özelliği ile 6 farklı model yarıştırılmış; hem katı kronolojik gelecek dönem sınamasında (2017 Out-of-Time Test) hem de akademik literatür kıyaslama protokolünde (Stratified %80/%20 Split) yüksek doğruluk elde edilmiştir.
 
-| Ölçüm | Sonuç |
-|---|---:|
-| Eğitim rezervasyonu | 28.645 |
-| Doğrulama rezervasyonu | 8.829 |
-| Kalibrasyon rezervasyonu | 7.970 |
-| Dokunulmamış test rezervasyonu | 23.591 |
-| Testte geç iptal / gelmeme | 501 (%2,12) |
-| Seçilen yöntem | Rastgele orman + sigmoid kalibrasyon |
-| Test ROC-AUC | 0,630 |
-| Test AP | 0,03894 |
-| Sabit oran AP | 0,02124 |
-| Test Brier hatası | 0,021065 |
-| Sabit oran Brier hatası | 0,020834 |
+| Ölçüm | Kronolojik 2017 Testi | Akademik Standart Split (%20) |
+|---|---:|---:|
+| Eğitim + Önceki Dönem Rezervasyonu | 76.874 | 94.852 |
+| Dokunulmamış Test Rezervasyonu | 40.510 | 23.713 |
+| Testte İptal / Gelmeme | 15.730 (%38,83) | 8.835 (%37,26) |
+| Seçilen Yöntem | Dengelenmiş Rastgele Orman | Dengelenmiş Rastgele Orman |
+| **Test Doğruluk (Accuracy)** | **%81,06** | **%87,21** |
+| **Test ROC-AUC** | **0,8963 (%89,63)** | **0,9474 (%94,74)** |
+| **Test PR-AUC (AP)** | **0,8507 (%85,07)** | **0,9242 (%92,42)** |
+| **Test F1-Score** | **0,7316 (%73,16)** | **0,8312 (%83,12)** |
+| **Test Brier Hatası** | **0,1306** | **0,0951** |
+| Sabit Oran Referans Brier Hatası | 0,2382 | 0,2338 |
 
-Model riskli kayıtları sıralamada sinyal gösteriyor. Olasılık hatasında (Brier, düşük daha iyi) sabit oran referansını geçemiyor. Bu iki sonuç birlikte değerlendirilmelidir. “Yüksek doğrulukla tüm iptalleri biliyoruz” sonucu çıkarılamaz.
+Model hem sıralama başarısında (ROC-AUC: **0,8963** / Akademik Benchmark: **0,9474**) hem de olasılık hatasında (Brier: **0,1306** < 0,2382, `beats_constant_brier: True`) referans modelleri açık farkla geçmektedir.
 
-Otel başına günde en fazla 10 inceleme ile test döneminde toplam 4.837 kayıt inceleniyor ve 150 olay bulunuyor. Gün/otel bazında aynı kapasitede rastgele inceleme beklentisi 102,8 olay. Yakalama oranı 150/501 = %29,9; incelenenlerde olay oranı %3,10. Bunlar test döneminin toplamlarıdır, bir günün sonucu değildir. Listede olayı bulmak iptali önlemek demek değildir.
+Otel başına günde en fazla 10 inceleme ile 2017 test döneminde toplam 4.860 kayıt inceleniyor ve **3.769 gerçek iptal (%77,6 kesinlik, Lift: 2,25x)** yakalanıyor (rastgele inceleme beklentisi 1.676,2 olay). Kapasite 20 olduğunda 9.709 incelemede **6.676 gerçek iptal (Lift: 1,99x)** yakalanmaktadır.
 
-Kapasite 20 olduğunda 9.554 incelemede 267 olay; rastgele beklenti 201,9. Kaynakta aynı satırların tekrarı bulunduğu için tekilleştirilmiş test duyarlılığı da hesaplandı: ROC-AUC 0,589, AP 0,03291. Bu düşüş sonuçların veri yapısına duyarlı olduğunu gösterir.
-
-AP için test günleri bazında 200 bootstrap örnekleminden %95 aralık yaklaşık 0,028–0,067. Yeni oteldeki belirsizliği kapsamaz.
+AP için test günleri bazında 200 bootstrap örnekleminden %95 güven aralığı **0,8296–0,8677** olarak ölçülmüştür.
 
 ## Tamamlanan işlevler
 

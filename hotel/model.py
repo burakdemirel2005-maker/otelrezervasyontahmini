@@ -6,8 +6,8 @@ from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier
-from sklearn.metrics import average_precision_score, roc_auc_score, brier_score_loss, log_loss, f1_score
+from sklearn.ensemble import RandomForestClassifier, HistGradientBoostingClassifier, VotingClassifier
+from sklearn.metrics import average_precision_score, roc_auc_score, brier_score_loss, log_loss, f1_score, accuracy_score
 from .data import NUM, CAT
 
 class RateBaseline(ClassifierMixin, BaseEstimator):
@@ -29,17 +29,22 @@ def candidates():
     def pipe(est):
         pre = ColumnTransformer([
             ('numeric',Pipeline([('impute',SimpleImputer(strategy='median')),('scale',StandardScaler())]),NUM),
-            ('category',Pipeline([('impute',SimpleImputer(strategy='most_frequent')),('encode',OneHotEncoder(handle_unknown='ignore',sparse_output=False))]),CAT)])
+            ('category',Pipeline([('impute',SimpleImputer(strategy='most_frequent')),('encode',OneHotEncoder(handle_unknown='ignore',min_frequency=25,sparse_output=False))]),CAT)])
         return Pipeline([('preprocess',pre),('classifier',est)])
+    rf = RandomForestClassifier(n_estimators=220,max_depth=24,min_samples_leaf=3,class_weight='balanced_subsample',n_jobs=-1,random_state=42)
+    hgb = HistGradientBoostingClassifier(max_iter=220,max_leaf_nodes=31,min_samples_leaf=30,l2_regularization=5.0,learning_rate=0.05,early_stopping=False,random_state=42)
+    ensemble = VotingClassifier([('rf',rf),('hgb',hgb)],voting='soft',weights=[2,1])
     return {'Genel oran':RateBaseline(), 'Otel ve kanal oranı':RateBaseline(True),
-            'Lojistik regresyon':pipe(LogisticRegression(C=0.3,max_iter=1000,random_state=42)),
-            'Rastgele orman':pipe(RandomForestClassifier(n_estimators=180,max_depth=9,min_samples_leaf=35,n_jobs=2,random_state=42)),
-            'Gradient boosting':pipe(HistGradientBoostingClassifier(max_iter=120,max_leaf_nodes=15,min_samples_leaf=60,l2_regularization=10,early_stopping=False,random_state=42))}
+            'Lojistik regresyon':pipe(LogisticRegression(C=0.5,max_iter=1000,random_state=42)),
+            'Rastgele orman':pipe(rf),
+            'Gradient boosting':pipe(hgb),
+            'Hibrit Topluluk (RF + GBDT)':pipe(ensemble)}
 
 def metrics(y,p):
     y=np.asarray(y); p=np.clip(np.asarray(p),1e-8,1-1e-8)
     pred_bin = (p >= 0.5).astype(int)
     return {'rows':len(y),'events':int(y.sum()),'event_rate':float(y.mean()),
+        'accuracy':float(accuracy_score(y, pred_bin)),
         'roc_auc':float(roc_auc_score(y,p)) if len(np.unique(y))>1 else None,
         'average_precision':float(average_precision_score(y,p)) if y.sum() else None,
         'f1':float(f1_score(y, pred_bin, zero_division=0)),

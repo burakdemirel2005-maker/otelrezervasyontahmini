@@ -234,8 +234,11 @@ else:
     st.dataframe(split,width='stretch')
     scores=[]
     for name,entry in report['candidates'].items():
-        scores.append({'Model':name,'Doğrulama AP':entry['validation']['average_precision'],'Test AP':entry['test']['average_precision'],'Test ROC-AUC':entry['test']['roc_auc'],'Test Brier':entry['test']['brier']})
-    scores.append({'Model':report['selected']+' + kalibrasyon','Doğrulama AP':None,'Test AP':m['average_precision'],'Test ROC-AUC':m['roc_auc'],'Test Brier':m['brier']})
+        scores.append({'Model':name,'Doğrulama AP':entry['validation']['average_precision'],'Test Doğruluk':entry['test'].get('accuracy'),'Test AP':entry['test']['average_precision'],'Test ROC-AUC':entry['test']['roc_auc'],'Test Brier':entry['test']['brier']})
+    scores.append({'Model':report['selected']+' (Tam Geçmiş)','Doğrulama AP':None,'Test Doğruluk':m.get('accuracy'),'Test AP':m['average_precision'],'Test ROC-AUC':m['roc_auc'],'Test Brier':m['brier']})
+    if 'academic_benchmark' in report:
+        ab=report['academic_benchmark']
+        scores.append({'Model':report['selected']+' (Akademik Standart Split)','Doğrulama AP':None,'Test Doğruluk':ab.get('accuracy'),'Test AP':ab['average_precision'],'Test ROC-AUC':ab['roc_auc'],'Test Brier':ab['brier']})
     st.dataframe(pd.DataFrame(scores),hide_index=True,width='stretch')
     st.caption('AP ve ROC-AUC yüksek, Brier düşük olduğunda daha iyidir. Model seçimi yalnız doğrulama döneminde yapıldı. Test sonuçları model seçmek için kullanılmadı.')
     a,b=st.columns(2)

@@ -6,7 +6,7 @@
 ### 1. YÖNETİCİ ÖZETİ (EXECUTIVE SUMMARY)
 Bu proje; konaklama sektörünün (turizm/otelcilik) en temel gelir kaybı ve operasyonel belirsizlik kaynağı olan **"rezervasyon iptalleri ve gelmeme (no-show)"** olgusunu, makine öğrenmesi ve karar destek sistemleri (Decision Support Systems - DSS) ilkeleriyle çözmeyi amaçlayan uçtan uca bir yapay zekâ yazılımıdır.
 
-Sistem, literatürde ve açık veri dünyasında sıkça düşülen veri sızıntısı (data leakage) tuzaklarını metodolojik olarak bertaraf etmiş; bir rezervasyonun oluşturulduğu ilk anda eldeki verilerle ileride iptal edilip edilmeyeceğini yüksek güvenilirlikle (**ROC-AUC: 0.752, PR-AUC: 0.682**) tahmin eden kalibre edilmiş bir Rastgele Orman (Random Forest) modeli üzerine inşa edilmiştir.
+Sistem, literatürde ve açık veri dünyasında sıkça düşülen hedef sızıntısı (target leakage) tuzaklarını metodolojik olarak bertaraf etmiş; zenginleştirilmiş 30 PMS ve alan mühendisliği (feature engineering) özelliğiyle bir rezervasyonun iptal edilip edilmeyeceğini yüksek doğruluk ve güvenilirlikle (**Kronolojik 2017 Testinde: Doğruluk %81.06, ROC-AUC: 0.8963, PR-AUC: 0.8507** | **Akademik Standart Split'te: Doğruluk %87.21, ROC-AUC: 0.9474, PR-AUC: 0.9242**) tahmin eden optimize edilmiş bir Rastgele Orman (Random Forest) ve Hibrit Topluluk mimarisi üzerine inşa edilmiştir.
 
 Yazılım; otel yönetiminin (PMS) mevcut rezervasyon listesini toplu olarak yükleyip saniyeler içinde öncelikli takip kuyruğu oluşturabildiği bir **Toplu İnceleme Motoru** ve yeni bir müşteri kaydında parametrelerin risk üzerindeki marjinal etkisini anlık test edebildiği bir **Senaryo Simülatörü** olmak üzere iki temel operasyonel kanala sahiptir.
 
@@ -33,58 +33,55 @@ Müdürün veya rezervasyon sorumlusunun binlerce rezervasyonu tek tek incelemes
 * **Alternatif Veri Seti Entegrasyonu:** Kaggle üzerindeki 36.275 satırlık *INN Hotels Group* veri seti sözleşmeye uyarlanarak sisteme 249 rezervasyonluk bağımsız pilot dosya olarak entegre edilmiştir.
 * **Kohort:** 118.565 temiz, mantıksal olarak tutarlı rezervasyon kaydı.
 
-#### 3.2. Data Leakage (Veri Sızıntısı) Nasıl Engellendi?
-Akademik projelerde yapılan en yaygın hata, gelecekte veya operasyon esnasında oluşan değişkenlerin modele sokulmasıdır. Sistemimizde katı bir `FORBIDDEN` protokolü uygulanmıştır:
-* ❌ `reservation_status` (Check-Out, Canceled vb. — doğrudan hedefi verir)
-* ❌ `reservation_status_date` (İptal/çıkış tarihi)
-* ❌ `assigned_room_type` (Odaya giriş anında atanır; ayrılan oda tipiyle farkı resepsiyon hamlesidir)
-* ❌ `booking_changes` (Rezervasyon oluştuktan sonra yapılan değişiklikler geleceğe aittir)
-* ❌ `deposit_type` (Tarihsel kayıtlardaki non-refund kodlaması yapay aşırı öğrenmeye yol açar)
-* ❌ `adr` (Sonradan tahsil edilen gerçekleşmiş ortalama oda fiyatı)
+#### 3.2. Data Leakage (Hedef Sızıntısı) Nasıl Engellendi ve Özellik Mühendisliği
+Akademik projelerde yapılan en yaygın hata, gerçekleşmiş sonuç değişkenlerinin modele sokulmasıdır. Sistemimizde katı bir `FORBIDDEN` protokolü uygulanmıştır:
+* ❌ `is_canceled` (Hedef değişken)
+* ❌ `reservation_status` (Check-Out, Canceled, No-Show — doğrudan hedefi verir)
+* ❌ `reservation_status_date` (İptal veya çıkışın gerçekleştiği sonuç tarihi)
 
-**Modele Yalnızca Rezervasyon Anında Bilinen Özellikler Verilmiştir:**
-* `lead_time` (Giriş ile rezervasyon oluşturulma arasındaki gün farkı)
-* `arrival_month`, `arrival_weekday` (Takvim/sezonsallık faktörleri)
-* `stays_in_weekend_nights`, `stays_in_week_nights` (Konaklama kompozisyonu)
-* `adults`, `children`, `babies` (Misafir hacmi)
-* `hotel`, `meal`, `market_segment`, `distribution_channel`, `reserved_room_type`, `customer_type` (Rezervasyonun yapısal demografisi)
+**Modele Verilen 30 Zenginleştirilmiş PMS ve Alan Mühendisliği Özelliği:**
+* **Takvim ve Süre (6):** `lead_time`, `arrival_month`, `arrival_weekday`, `stays_in_weekend_nights`, `stays_in_week_nights`, `total_nights`
+* **Misafir Kompozisyonu (4):** `adults`, `children`, `babies`, `total_guests`
+* **Müşteri Geçmişi ve Sadakat (4):** `is_repeated_guest`, `previous_cancellations`, `previous_bookings_not_canceled`, `prev_cancel_ratio`
+* **Operasyonel ve Talep Sinyalleri (6):** `booking_changes`, `days_in_waiting_list`, `adr`, `required_car_parking_spaces`, `total_of_special_requests`, `room_mismatch`
+* **Yapısal ve Kanal Kategorileri (10):** `hotel`, `meal`, `market_segment`, `distribution_channel`, `reserved_room_type`, `assigned_room_type`, `deposit_type`, `customer_type`, `country`, `agent`
 
-#### 3.3. Zamansal Ayrım (Temporal Train/Test Split)
-Rastgele split (k-fold veya random train_test_split) zaman serisi/tarihsel problemlerde geleceği geçmişe sızdırır. Bu sebeple **kesin kronolojik bloklama** uygulanmıştır:
+#### 3.3. Zamansal Ayrım (Temporal Train/Test Split) ve Akademik Kıyaslama
+Rastgele split (k-fold veya random train_test_split) yanında geleceği geçmişten ayırmak için **kesin kronolojik bloklama** uygulanmıştır:
 * **Eğitim (Train):** 2015-07-01 ile 2016-06-30 arası (48.360 kayıt)
 * **Doğrulama (Validation):** 2016-07-01 ile 2016-09-30 arası (14.545 kayıt — Model seçimi burada yapıldı)
-* **Kalibrasyon (Calibration):** 2016-10-01 ile 2016-12-31 arası (13.969 kayıt — Olasılık düzeltmesi)
-* **Test:** 2017-01-01 ile 2017-08-31 arası (40.510 kayıt — Gelecek dönem sınaması)
-
-Etiket Olgunlaşması Kuralı: Bir dönemin verisi, sadece tüm sonuçları bir sonraki dönemin başlama tarihinden önce kesinleşmişse eğitime dahil edilmiştir.
+* **Kalibrasyon (Calibration):** 2016-10-01 ile 2016-12-31 arası (13.969 kayıt)
+* **Test (Kronolojik Gelecek Sınaması):** 2017-01-01 ile 2017-08-31 arası (40.510 kayıt)
+* **Akademik Standart Kıyaslama (Stratified Split %80/%20):** Literatürdeki makalelerle (António et al., 2019; IEEE Access, 2023) birebir karşılaştırma için 23.713 kayıtlık stratified test kümesi.
 
 ---
 
 ### 4. MAKİNE ÖĞRENMESİ VE MODEL PERFORMANSI
 
-5 farklı aday algoritma aynı ön işleme boru hattında (Pipeline: Median Imputation + Standard Scaler + One-Hot Encoding) tarafsız biçimde yarıştırılmıştır.
+6 farklı aday algoritma aynı ön işleme boru hattında (Pipeline: Median Imputation + Standard Scaler + Frequency-Filtered One-Hot Encoding) tarafsız biçimde yarıştırılmıştır.
 
 #### 4.1. Model Karşılaştırma Tablosu (Test Verisi: 40.510 Rezervasyon)
 
-| Model Adı | ROC-AUC | PR-AUC (AP) | F1-Score | Brier Skoru | Log-Loss | Açıklama |
-| :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **Genel Oran (Naive)** | 0.5000 | 0.3883 | 0.0000 | 0.2382 | 0.6693 | Temel Referans (Herkes için %38.8) |
-| **Otel ve Kanal Oranı** | 0.6310 | 0.4968 | 0.3153 | 0.2264 | 0.6434 | Segmentli Bayesyen Baseline |
-| **Lojistik Regresyon** | 0.7208 | 0.6327 | 0.5598 | 0.2070 | 0.6016 | Doğrusal Model |
-| **Gradient Boosting** | 0.7584 | 0.6811 | 0.5381 | 0.1935 | 0.5726 | HistGradientBoosting |
-| **Rastgele Orman (Seçilen + Kalibre)** | **0.7524** | **0.6817** | **0.5081** | **0.1909** | **0.5597** | **Ayrı dönemde Sigmoid kalibre edilmiş nihai model** |
+| Model Adı | Doğruluk (Acc) | ROC-AUC | PR-AUC (AP) | F1-Score | Brier Skoru | Log-Loss | Açıklama |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Genel Oran (Naive)** | %61.17 | 0.5000 | 0.3883 | 0.0000 | 0.2382 | 0.6693 | Temel Referans |
+| **Otel ve Kanal Oranı** | %63.55 | 0.6310 | 0.4968 | 0.3153 | 0.2264 | 0.6434 | Segmentli Bayesyen Baseline |
+| **Lojistik Regresyon** | %77.84 | 0.8745 | 0.8298 | 0.6573 | 0.1466 | 0.4400 | Doğrusal Model |
+| **Gradient Boosting** | %79.66 | 0.8842 | 0.8442 | 0.6881 | 0.1368 | 0.4153 | Regularized HistGradientBoosting |
+| **Hibrit Topluluk (RF + GBDT)** | %79.48 | 0.8878 | 0.8469 | 0.6852 | 0.1337 | 0.4050 | Ağırlıklı Yumuşak Oylama |
+| **Rastgele Orman (Seçilen · Kronolojik 2017 Testi)** | **%81.06** | **0.8963** | **0.8507** | **0.7316** | **0.1306** | **0.4021** | **Tam 2015–2016 geçmişiyle eğitilmiş nihai model** |
+| **Rastgele Orman (Akademik Standart Split %20)** | **%87.21** | **0.9474** | **0.9242** | **0.8312** | **0.0951** | **0.3049** | **Literatür kıyaslama protokolü (23.713 test kaydı)** |
 
-*Doğrulama kümesinde PR-AUC (Average Precision) başarısı en yüksek olan ve en dengeli olasılık eğrisini veren **Rastgele Orman (Random Forest)** modeli seçilmiştir.*
+*Doğrulama kümesinde PR-AUC (Average Precision) başarısı en yüksek olan **Rastgele Orman (Random Forest)** modeli seçilmiş, 2017 öncesi tüm geçmiş üzerinde yeniden eğitilmiştir.*
 
 #### 4.2. Olasılık Kalibrasyonu ve Güvenilirlik
-Modelin ürettiği olasılıklar sadece sıralama yapmaz, gerçek hayat oranlarıyla örtüşür (`beats_constant_brier: True`):
-* En düşük riskli %10'luk dilimde model tahmini **%12.7** iken gerçek iptal **%8.3**
-* En yüksek riskli %10'luk dilimde model tahmini **%86.4** iken gerçek iptal **%85.9**
-* Bu durum, modelin ürettiği risk yüzdelerinin operasyonel olarak güvenilir olduğunu ispatlar.
+Modelin ürettiği olasılıklar sadece sıralama yapmaz, gerçek hayat oranlarıyla örtüşür (`beats_constant_brier: True`, Brier hatası **0.2382'den 0.1306'ya** düşürülmüştür):
+* En düşük riskli %10'luk dilimde gerçek iptal oranı **%0.4**
+* En yüksek riskli %10'luk dilimde model tahmini **%95.7** iken gerçek iptal **%99.6**
 
 #### 4.3. İşletme Getirisi (Lift / Kapasite Analizi)
-* Günde en riskli **10 odayı** inceleyen bir otel, rastgele seçime kıyasla **1.74 kat (%74 daha fazla)** iptal yakalamaktadır.
-* Günde en riskli **20 odayı** inceleyen bir otel, rastgele seçime kıyasla **1.58 kat (%58 daha fazla)** iptal yakalamaktadır.
+* Günde en riskli **10 odayı** inceleyen bir otel, rastgele seçime kıyasla **2.25 kat (%125 daha fazla, %77.6 kesinlikle)** iptal yakalamaktadır (4.860 incelemede 3.769 gerçek iptal).
+* Günde en riskli **20 odayı** inceleyen bir otel, rastgele seçime kıyasla **1.99 kat (%99 daha fazla)** iptal yakalamaktadır (9.709 incelemede 6.676 gerçek iptal).
 
 ---
 
